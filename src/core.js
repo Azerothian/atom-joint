@@ -48,11 +48,11 @@ var joint = {
         },
 
         getByPath: function(obj, path, delim) {
-            
+
             delim = delim || '.';
             var keys = path.split(delim);
             var key;
-            
+
             while (keys.length) {
                 key = keys.shift();
                 if (key in obj) {
@@ -113,10 +113,10 @@ var joint = {
         },
 
         flattenObject: function(obj, delim, stop) {
-            
+
             delim = delim || '.';
             var ret = {};
-	    
+
 	    for (var key in obj) {
 		if (!obj.hasOwnProperty(key)) continue;
 
@@ -124,12 +124,12 @@ var joint = {
                 if (shouldGoDeeper && stop && stop(obj[key])) {
                     shouldGoDeeper = false;
                 }
-                
+
 		if (shouldGoDeeper) {
 		    var flatObject = this.flattenObject(obj[key], delim, stop);
 		    for (var flatKey in flatObject) {
 			if (!flatObject.hasOwnProperty(flatKey)) continue;
-			
+
 			ret[key + delim + flatKey] = flatObject[flatKey];
 		    }
 		} else {
@@ -142,7 +142,7 @@ var joint = {
         uuid: function() {
 
             // credit: http://stackoverflow.com/posts/2117523/revisions
-            
+
             return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
                 var r = Math.random()*16|0, v = c == 'x' ? r : (r&0x3|0x8);
                 return v.toString(16);
@@ -151,7 +151,7 @@ var joint = {
 
         // Generate global unique id for obj and store it as a property of the object.
         guid: function(obj) {
-            
+
             this.guid.id = this.guid.id || 1;
             obj.id = (obj.id === undefined ? 'j_' + this.guid.id++ : obj.id);
             return obj.id;
@@ -161,13 +161,13 @@ var joint = {
         // All the properties will be overwritten by the properties from the following
         // arguments. Inherited properties are ignored.
         mixin: function() {
-            
+
             var target = arguments[0];
-            
+
             for (var i = 1, l = arguments.length; i < l; i++) {
-                
+
                 var extension = arguments[i];
-                
+
                 // Only functions and objects can be mixined.
 
                 if ((Object(extension) !== extension) &&
@@ -178,30 +178,30 @@ var joint = {
                 }
 
                 _.each(extension, function(copy, key) {
-                    
+
                     if (this.mixin.deep && (Object(copy) === copy)) {
 
                         if (!target[key]) {
 
                             target[key] = _.isArray(copy) ? [] : {};
                         }
-                        
+
                         this.mixin(target[key], copy);
                         return;
                     }
-                    
+
                     if (target[key] !== copy) {
-                        
+
                         if (!this.mixin.supplement || !target.hasOwnProperty(key)) {
-                            
+
 	                    target[key] = copy;
                         }
 
                     }
-                    
+
                 }, this);
             }
-            
+
             return target;
         },
 
@@ -220,7 +220,7 @@ var joint = {
 
         // Same as `mixin()` but deep version.
         deepMixin: function() {
-            
+
             this.mixin.deep = true;
             var ret = this.mixin.apply(this, arguments);
             this.mixin.deep = false;
@@ -229,7 +229,7 @@ var joint = {
 
         // Same as `supplement()` but deep version.
         deepSupplement: function() {
-            
+
             this.mixin.deep = this.mixin.supplement = true;
             var ret = this.mixin.apply(this, arguments);
             this.mixin.deep = this.mixin.supplement = false;
@@ -566,7 +566,7 @@ var joint = {
             // `x` ... horizontal blur
             // `y` ... vertical blur (optional)
             blur: function(args) {
-                
+
                 var x = _.isFinite(args.x) ? args.x : 2;
 
                 return _.template('<filter><feGaussianBlur stdDeviation="${stdDeviation}"/></filter>', {
@@ -598,7 +598,7 @@ var joint = {
             grayscale: function(args) {
 
                 var amount = _.isFinite(args.amount) ? args.amount : 1;
-                
+
                 return _.template('<filter><feColorMatrix type="matrix" values="${a} ${b} ${c} 0 0 ${d} ${e} ${f} 0 0 ${g} ${b} ${h} 0 0 0 0 0 1 0"/></filter>', {
                     a: 0.2126 + 0.7874 * (1 - amount),
                     b: 0.7152 - 0.7152 * (1 - amount),
@@ -651,7 +651,7 @@ var joint = {
             invert: function(args) {
 
                 var amount = _.isFinite(args.amount) ? args.amount : 1;
-                
+
                 return _.template('<filter><feComponentTransfer><feFuncR type="table" tableValues="${amount} ${amount2}"/><feFuncG type="table" tableValues="${amount} ${amount2}"/><feFuncB type="table" tableValues="${amount} ${amount2}"/></feComponentTransfer></filter>', {
                     amount: amount,
                     amount2: 1 - amount
@@ -670,7 +670,7 @@ var joint = {
             contrast: function(args) {
 
                 var amount = _.isFinite(args.amount) ? args.amount : 1;
-                
+
                 return _.template('<filter><feComponentTransfer><feFuncR type="linear" slope="${amount}" intercept="${amount2}"/><feFuncG type="linear" slope="${amount}" intercept="${amount2}"/><feFuncB type="linear" slope="${amount}" intercept="${amount2}"/></feComponentTransfer></filter>', {
                     amount: amount,
                     amount2: .5 - amount / 2
@@ -692,7 +692,7 @@ var joint = {
                     thousands: ',',
                     grouping: [3]
                 };
-                
+
                 // See Python format specification mini-language: http://docs.python.org/release/3.1.3/library/string.html#format-specification-mini-language.
                 // [[fill]align][sign][symbol][0][width][,][.precision][type]
                 var re = /(?:([^{])?([<>=^]))?([+\- ])?([$#])?(0)?(\d+)?(,)?(\.-?\d+)?([a-z%])?/i;
@@ -713,7 +713,7 @@ var joint = {
                 var integer = false;
 
                 if (precision) precision = +precision.substring(1);
-                
+
                 if (zfill || fill === '0' && align === '=') {
                     zfill = fill = '0';
                     align = '=';
@@ -756,7 +756,7 @@ var joint = {
                 var negative = value < 0 || value === 0 && 1 / value < 0 ? (value = -value, '-') : sign;
 
                 var fullSuffix = suffix;
-                
+
                 // Apply the scale, computing it from the value's exponent for si format.
                 // Preserve the existing suffix, if any, such as the currency symbol.
                 if (scale < 0) {
@@ -776,7 +776,7 @@ var joint = {
                 var after = i < 0 ? '' : locale.decimal + value.substring(i + 1);
 
                 function formatGroup(value) {
-                    
+
                     var i = value.length;
                     var t = [];
                     var j = 0;
@@ -787,7 +787,7 @@ var joint = {
                     }
                     return t.reverse().join(locale.thousands);
                 }
-                
+
                 // If the fill character is not `'0'`, grouping is applied before padding.
                 if (!zfill && comma && locale.grouping) {
 
@@ -836,7 +836,7 @@ var joint = {
             },
 
             precision: function(value, precision) {
-                
+
                 return precision - (value ? Math.ceil(Math.log(value) / Math.LN10) : 1);
             },
 
@@ -849,7 +849,7 @@ var joint = {
                         symbol: d
                     };
                 });
-                
+
                 var i = 0;
                 if (value) {
                     if (value < 0) value *= -1;

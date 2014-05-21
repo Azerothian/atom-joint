@@ -7,13 +7,13 @@
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
         define([], factory);
-        
+
     } else if (typeof exports === 'object') {
         // Node. Does not work with strict CommonJS, but
         // only CommonJS-like environments that support module.exports,
         // like Node.
         module.exports = factory();
-        
+
     } else {
         // Browser globals.
         root.g = factory();
@@ -96,10 +96,10 @@
             // Makes sure that the comparison with zero takes rounding errors into account.
             var PRECISION = 10;
             // Note that `atan2` is not defined for `x`, `y` both equal zero.
-	    var rad = (y.toFixed(PRECISION) == 0 && x.toFixed(PRECISION) == 0) ? 0 : atan2(y, x); 
+	    var rad = (y.toFixed(PRECISION) == 0 && x.toFixed(PRECISION) == 0) ? 0 : atan2(y, x);
 
             // Correction for III. and IV. quadrant.
-	    if (rad < 0) { 
+	    if (rad < 0) {
 	        rad = 2*PI + rad;
 	    }
 	    return 180*rad / PI;
@@ -144,7 +144,7 @@
         // Return the bearing between me and point `p`.
         bearing: function(p) {
             return line(this, p).bearing();
-        },        
+        },
         // Converts rectangular to polar coordinates.
         // An origin can be specified, otherwise it's 0@0.
         toPolar: function(o) {
@@ -199,7 +199,7 @@
         if (deg < 90) y = -y;
         else if (deg < 180) { x = -x; y = -y; }
         else if (deg < 270) x = -x;
-        
+
         return point(o.x + x, o.y + y);
     };
 
@@ -216,7 +216,7 @@
         this.start = point(p1);
         this.end = point(p2);
     }
-    
+
     line.prototype = {
         toString: function() {
 	    return this.start.toString() + ' ' + this.end.toString();
@@ -253,7 +253,7 @@
 	        alpha * det < 0 ||
 	        beta * det < 0) {
                 // No intersection found.
-	        return null;	
+	        return null;
 	    }
 	    if (det > 0){
 	        if (alpha > det || beta > det){
@@ -267,11 +267,11 @@
 	    return point(this.start.x + (alpha * pt1Dir.x / det),
 		         this.start.y + (alpha * pt1Dir.y / det));
         },
-        
+
         // @return the bearing (cardinal direction) of the line. For example N, W, or SE.
         // @returns {String} One of the following bearings : NE, E, SE, S, SW, W, NW, N.
         bearing: function() {
-            
+
             var lat1 = toRad(this.start.y);
             var lat2 = toRad(this.end.y);
             var lon1 = this.start.x;
@@ -301,14 +301,14 @@
             y = x.y;
             w = x.width;
             h = x.height;
-            x = x.x;        
+            x = x.x;
         }
         this.x = x;
         this.y = y;
         this.width = w;
         this.height = h;
     }
-    
+
     rect.prototype = {
         toString: function() {
 	    return this.origin().toString() + ' ' + this.corner().toString();
@@ -334,7 +334,7 @@
 	    var myCorner = this.corner();
 	    var rOrigin = r.origin();
 	    var rCorner = r.corner();
-            
+
 	    if (rCorner.x <= myOrigin.x ||
 	        rCorner.y <= myOrigin.y ||
 	        rOrigin.x >= myCorner.x ||
@@ -351,7 +351,7 @@
 	    var distToBottom = (this.y + this.height) - p.y;
 	    var closest = distToLeft;
 	    var side = 'left';
-            
+
 	    if (distToRight < closest) {
 	        closest = distToRight;
 	        side = 'right';
@@ -417,7 +417,7 @@
                 if (h >= y && H > h) return false;
             }
             return true;
-        },        
+        },
         // @return {point} a point on my boundary nearest to p
         // @see Squeak Smalltalk, Rectangle>>pointNearestTo:
         pointNearestToPoint: function(p) {
@@ -441,7 +441,7 @@
 	    var center = point(this.x + this.width/2, this.y + this.height/2);
             var result;
             if (angle) p.rotate(center, angle);
-            
+
 	    // (clockwise, starting from the top side)
 	    var sides = [
 	        line(this.origin(), this.topRight()),
@@ -450,7 +450,7 @@
 	        line(this.bottomLeft(), this.origin())
 	    ];
 	    var connector = line(center, p);
-            
+
 	    for (var i = sides.length - 1; i >= 0; --i){
 	        var intersection = sides[i].intersection(connector);
 	        if (intersection !== null){
@@ -499,7 +499,7 @@
             this.width = newwidth;
             this.height = newheight;
             return this;
-        }        
+        }
     };
 
     // Ellipse.
@@ -561,11 +561,11 @@
             var path = ['M', points[0].x, points[0].y];
 
             for (var i = 0; i < controlPoints[0].length; i++) {
-                path.push('C', controlPoints[0][i].x, controlPoints[0][i].y, controlPoints[1][i].x, controlPoints[1][i].y, points[i+1].x, points[i+1].y);        
+                path.push('C', controlPoints[0][i].x, controlPoints[0][i].y, controlPoints[1][i].x, controlPoints[1][i].y, points[i+1].x, points[i+1].y);
             }
             return path;
         },
-        
+
         // Get open-ended Bezier Spline Control Points.
         // @param knots Input Knot Bezier spline points (At least two points!).
         // @param firstControlPoints Output First Control points. Array of knots.length - 1 length.
@@ -577,7 +577,7 @@
             var i;
 
             // Special case: Bezier curve should be a straight line.
-            if (n == 1) { 
+            if (n == 1) {
 	        // 3P1 = 2P0 + P3
 	        firstControlPoints[0] = point((2 * knots[0].x + knots[1].x) / 3,
 	                                      (2 * knots[0].y + knots[1].y) / 3);
@@ -586,11 +586,11 @@
 	                                       2 * firstControlPoints[0].y - knots[0].y);
 	        return [firstControlPoints, secondControlPoints];
             }
-            
+
                 // Calculate first Bezier control points.
             // Right hand side vector.
             var rhs = [];
-            
+
             // Set right hand side X values.
             for (i = 1; i < n - 1; i++) {
                 rhs[i] = 4 * knots[i].x + 2 * knots[i + 1].x;
@@ -599,7 +599,7 @@
             rhs[n - 1] = (8 * knots[n - 1].x + knots[n].x) / 2.0;
             // Get first control points X-values.
             var x = this.getFirstControlPoints(rhs);
-            
+
             // Set right hand side Y values.
             for (i = 1; i < n - 1; ++i) {
 	        rhs[i] = 4 * knots[i].y + 2 * knots[i + 1].y;
@@ -608,7 +608,7 @@
             rhs[n - 1] = (8 * knots[n - 1].y + knots[n].y) / 2.0;
             // Get first control points Y-values.
             var y = this.getFirstControlPoints(rhs);
-            
+
             // Fill output arrays.
             for (i = 0; i < n; i++) {
 	        // First control point.
@@ -634,17 +634,17 @@
             var x = [];
             var tmp = [];
             var b = 2.0;
-            
+
             x[0] = rhs[0] / b;
             // Decomposition and forward substitution.
-            for (var i = 1; i < n; i++) { 
+            for (var i = 1; i < n; i++) {
 	        tmp[i] = 1 / b;
 	        b = (i < n - 1 ? 4.0 : 3.5) - tmp[i];
 	        x[i] = (rhs[i] - x[i - 1]) / b;
             }
             for (i = 1; i < n; i++) {
                 // Backsubstitution.
-	        x[n - i - 1] -= tmp[n - i] * x[n - i]; 
+	        x[n - i - 1] -= tmp[n - i] * x[n - i];
             }
             return x;
         }

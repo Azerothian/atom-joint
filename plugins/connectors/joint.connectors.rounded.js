@@ -1,3 +1,11 @@
+if (typeof exports === 'object') {
+  var joint = {
+    connectors: {}
+  }
+    var _ = require('lodash');
+    var g = require('../../src/geometry');
+}
+
 joint.connectors.rounded = function(sourcePoint, targetPoint, vertices, opts) {
 
     var offset = opts.radius || 10;
@@ -28,3 +36,6 @@ joint.connectors.rounded = function(sourcePoint, targetPoint, vertices, opts) {
 
     return d.join(' ');
 };
+if (typeof exports === 'object') {
+  module.exports = joint.connectors.rounded;
+}

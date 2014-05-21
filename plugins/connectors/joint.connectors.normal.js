@@ -1,3 +1,9 @@
+if (typeof exports === 'object') {
+  var joint = {
+    connectors: {}
+  }
+    var _ = require('lodash');
+}
 joint.connectors.normal = function(sourcePoint, targetPoint, vertices) {
 
     // Construct the `d` attribute of the `<path>` element.
@@ -12,3 +18,6 @@ joint.connectors.normal = function(sourcePoint, targetPoint, vertices) {
 
     return d.join(' ');
 };
+if (typeof exports === 'object') {
+  module.exports = joint.connectors.normal;
+}

@@ -4,16 +4,22 @@
 // A tiny library for making your live easier when dealing with SVG.
 
 // Copyright © 2012 - 2014 client IO (http://client.io)
+if (typeof exports === 'object') {
+  var g = require('./geometry');
+}
+
 
 (function(root, factory) {
 
     if (typeof define === 'function' && define.amd) {
         // AMD. Register as an anonymous module.
         define([], factory);
-        
+
+    } else if (typeof exports === 'object') {
+      module.exports = factory();
     } else {
-        // Browser globals.
-        root.Vectorizer = root.V = factory();
+      // Browser globals.
+      root.Vectorizer = root.V = factory();
     }
 
 }(this, function() {
@@ -42,7 +48,7 @@
     function createElement(el, attrs, children) {
 
         if (!el) return undefined;
-        
+
         // If `el` is an object, it is probably a native SVG element. Wrap it to VElement.
         if (typeof el === 'object') {
             return new VElement(el);
@@ -51,15 +57,15 @@
 
         // If `el` is a `'svg'` or `'SVG'` string, create a new SVG canvas.
         if (el.toLowerCase() === 'svg') {
-            
+
             attrs.xmlns = ns.xmlns;
             attrs['xmlns:xlink'] = ns.xlink;
             attrs.version = SVGversion;
-            
+
         } else if (el[0] === '<') {
             // Create element from an SVG string.
             // Allows constructs of type: `document.appendChild(Vectorizer('<rect></rect>').node)`.
-            
+
             var svg = '<svg xmlns="' + ns.xmlns + '" xmlns:xlink="' + ns.xlink + '" version="' + SVGversion + '">' + el + '</svg>';
             var parser = new DOMParser();
             parser.async = false;
@@ -78,10 +84,10 @@
                 }
                 return ret;
             }
-            
+
             return new VElement(document.importNode(svgDoc.firstChild, true));
         }
-        
+
         el = document.createElementNS(ns.xmlns, el);
 
         // Set attributes.
@@ -89,7 +95,7 @@
 
             setAttribute(el, key, attrs[key]);
         }
-        
+
         // Normalize `children` array.
         if (Object.prototype.toString.call(children) != '[object Array]') children = [children];
 
@@ -99,12 +105,12 @@
             child = children[i];
             el.appendChild(child instanceof VElement ? child.node : child);
         }
-        
+
         return new VElement(el);
     }
 
     function setAttribute(el, name, value) {
-        
+
         if (name.indexOf(':') > -1) {
             // Attribute names can be namespaced. E.g. `image` elements
             // have a `xlink:href` attribute to set the source of the image.
@@ -121,7 +127,7 @@
         var translate,
             rotate,
             scale;
-        
+
         if (transform) {
             var translateMatch = transform.match(/translate\((.*)\)/);
             if (translateMatch) {
@@ -138,7 +144,7 @@
         }
 
         var sx = (scale && scale[0]) ? parseFloat(scale[0]) : 1;
-        
+
         return {
             translate: {
                 tx: (translate && translate[0]) ? parseInt(translate[0], 10) : 0,
@@ -161,7 +167,7 @@
     // ---------------------
 
     function deltaTransformPoint(matrix, point)  {
-        
+
 	var dx = point.x * matrix.a + point.y * matrix.c + 0;
 	var dy = point.x * matrix.b + point.y * matrix.d + 0;
 	return { x: dx, y: dy };
@@ -170,17 +176,17 @@
     function decomposeMatrix(matrix) {
 
         // @see https://gist.github.com/2052247
-        
+
         // calculate delta transform point
 	var px = deltaTransformPoint(matrix, { x: 0, y: 1 });
 	var py = deltaTransformPoint(matrix, { x: 1, y: 0 });
-        
+
 	// calculate skew
 	var skewX = ((180 / Math.PI) * Math.atan2(px.y, px.x) - 90);
 	var skewY = ((180 / Math.PI) * Math.atan2(py.y, py.x));
-        
+
 	return {
-            
+
 	    translateX: matrix.e,
 	    translateY: matrix.f,
 	    scaleX: Math.sqrt(matrix.a * matrix.a + matrix.b * matrix.b),
@@ -190,7 +196,7 @@
 	    rotation: skewX // rotation is the same as skew x
 	};
     }
-    
+
     // VElement.
     // ---------
 
@@ -205,10 +211,10 @@
     // --------------------
 
     VElement.prototype = {
-        
+
         translate: function(tx, ty) {
             ty = ty || 0;
-            
+
             var transformAttr = this.attr('transform') || '',
                 transform = parseTransformString(transformAttr);
 
@@ -216,7 +222,7 @@
             if (typeof tx === 'undefined') {
                 return transform.translate;
             }
-            
+
             transformAttr = transformAttr.replace(/translate\([^\)]*\)/g, '').trim();
 
             var newTx = transform.translate.tx + tx,
@@ -236,12 +242,12 @@
             if (typeof angle === 'undefined') {
                 return transform.rotate;
             }
-            
+
             transformAttr = transformAttr.replace(/rotate\([^\)]*\)/g, '').trim();
 
             var newAngle = transform.rotate.angle + angle % 360,
                 newOrigin = (cx !== undefined && cy !== undefined) ? ',' + cx + ',' + cy : '';
-            
+
             this.attr('transform', transformAttr + ' rotate(' + newAngle + newOrigin + ')');
             return this;
         },
@@ -249,7 +255,7 @@
         // Note that `scale` as the only transformation does not combine with previous values.
         scale: function(sx, sy) {
             sy = (typeof sy === 'undefined') ? sx : sy;
-            
+
             var transformAttr = this.attr('transform') || '',
                 transform = parseTransformString(transformAttr);
 
@@ -257,7 +263,7 @@
             if (typeof sx === 'undefined') {
                 return transform.scale;
             }
-            
+
             transformAttr = transformAttr.replace(/scale\([^\)]*\)/g, '').trim();
 
             this.attr('transform', transformAttr + ' scale(' + sx + ',' + sy + ')');
@@ -272,7 +278,7 @@
             // If the element is not in the live DOM, it does not have a bounding box defined and
             // so fall back to 'zero' dimension element.
             if (!this.node.ownerSVGElement) return { x: 0, y: 0, width: 0, height: 0 };
-            
+
             var box;
             try {
 
@@ -308,15 +314,15 @@
             point.x = box.x;
             point.y = box.y;
             corners.push(point.matrixTransform(matrix));
-            
+
             point.x = box.x + box.width;
             point.y = box.y;
             corners.push(point.matrixTransform(matrix));
-            
+
             point.x = box.x + box.width;
             point.y = box.y + box.height;
             corners.push(point.matrixTransform(matrix));
-            
+
             point.x = box.x;
             point.y = box.y + box.height;
             corners.push(point.matrixTransform(matrix));
@@ -325,9 +331,9 @@
             var maxX = minX;
             var minY = corners[0].y;
             var maxY = minY;
-            
+
             for (var i = 1, len = corners.length; i < len; i++) {
-                
+
                 var x = corners[i].x;
                 var y = corners[i].y;
 
@@ -336,7 +342,7 @@
                 } else if (x > maxX) {
                     maxX = x;
                 }
-                
+
                 if (y < minY) {
                     minY = y;
                 } else if (y > maxY) {
@@ -368,31 +374,31 @@
             // In order to unify this behaviour across all browsers
             // we rather hide the text element when it's empty.
             this.attr('display', content ? null : 'none');
-            
+
             if (lines.length === 1) {
                 this.node.textContent = content;
                 return this;
             }
             // Easy way to erase all `<tspan>` children;
             this.node.textContent = '';
-            
+
             for (; i < lines.length; i++) {
 
                 // Shift all the <tspan> but first by one line (`1em`)
                 tspan = V('tspan', { dy: (i == 0 ? '0em' : '1em'), x: this.attr('x') || 0});
                 tspan.node.textContent = lines[i];
-                
+
                 this.append(tspan);
             }
             return this;
         },
-        
+
         attr: function(name, value) {
-            
+
             if (typeof name === 'string' && typeof value === 'undefined') {
                 return this.node.getAttribute(name);
             }
-            
+
             if (typeof name === 'object') {
 
                 for (var attrName in name) {
@@ -400,7 +406,7 @@
                         setAttribute(this.node, attrName, name[attrName]);
                     }
                 }
-                
+
             } else {
 
                 setAttribute(this.node, name, value);
@@ -418,9 +424,9 @@
         append: function(el) {
 
             var els = el;
-            
+
             if (Object.prototype.toString.call(el) !== '[object Array]') {
-                
+
                 els = [el];
             }
 
@@ -428,7 +434,7 @@
                 el = els[i];
                 this.node.appendChild(el instanceof VElement ? el.node : el);
             }
-            
+
             return this;
         },
 
@@ -444,7 +450,7 @@
         defs: function() {
 
             var defs = this.svg().node.getElementsByTagName('defs');
-            
+
             return (defs && defs.length) ? V(defs[0]) : undefined;
         },
 
@@ -471,12 +477,12 @@
             }
             return nodes;
         },
-        
+
         // Convert global point into the coordinate space of this element.
         toLocalPoint: function(x, y) {
 
             var svg = this.svg().node;
-            
+
             var p = svg.createSVGPoint();
             p.x = x;
             p.y = y;
@@ -573,7 +579,7 @@
                 animateMotion.node.beginElement();
             } catch (e) {
                 // Fallback for IE 9.
-		// Run the animation programatically if FakeSmile (`http://leunen.me/fakesmile/`) present 
+		// Run the animation programatically if FakeSmile (`http://leunen.me/fakesmile/`) present
 		if (document.documentElement.getAttribute('smiling') === 'fake') {
 
 		    // Register the animation. (See `https://answers.launchpad.net/smil/+question/203333`)
@@ -665,14 +671,14 @@
     V.rectToPath = rectToPath;
 
     var svgDocument = V('svg').node;
-    
+
     V.createSVGMatrix = function(m) {
 
         var svgMatrix = svgDocument.createSVGMatrix();
         for (var component in m) {
             svgMatrix[component] = m[component];
         }
-        
+
         return svgMatrix;
     };
 
@@ -692,4 +698,3 @@
     return V;
 
 }));
-

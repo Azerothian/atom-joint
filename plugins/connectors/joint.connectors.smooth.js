@@ -1,3 +1,11 @@
+if (typeof exports === 'object') {
+  var joint = {
+    connectors: {}
+  }
+  var g = require('../../src/geometry');
+}
+
+
 joint.connectors.smooth = function(sourcePoint, targetPoint, vertices) {
 
     var d;
@@ -12,7 +20,7 @@ joint.connectors.smooth = function(sourcePoint, targetPoint, vertices) {
         // between the source and target points. SourceControlPoint Y is equal to sourcePoint Y
         // and targetControlPointY being equal to targetPointY. Handle situation were
         // sourcePointX is greater or less then targetPointX.
-        var controlPointX = (sourcePoint.x < targetPoint.x) 
+        var controlPointX = (sourcePoint.x < targetPoint.x)
                 ? targetPoint.x - ((targetPoint.x - sourcePoint.x) / 2)
                 : sourcePoint.x - ((sourcePoint.x - targetPoint.x) / 2);
 
@@ -25,3 +33,6 @@ joint.connectors.smooth = function(sourcePoint, targetPoint, vertices) {
 
     return d.join(' ');
 };
+if (typeof exports === 'object') {
+  module.exports = joint.connectors.smooth;
+}

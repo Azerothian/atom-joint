@@ -10,8 +10,10 @@ if (typeof exports === 'object') {
             Link: require('./joint.dia.link').Link
         }
     };
-    var Backbone = require('backbone');
+    var Backbone = require('./atom.backbone');
     var _ = require('lodash');
+    var V = require('./vectorizer');
+    var g = require('./geometry');
 }
 
 
@@ -54,11 +56,11 @@ joint.dia.Cell = Backbone.Model.extend({
             var defaultAttr = defaultAttrs[selector];
 
             _.each(attr, function(value, name) {
-                
+
                 // attr is mainly flat though it might have one more level (consider the `style` attribute).
                 // Check if the `value` is object and if yes, go one level deep.
                 if (_.isObject(value) && !_.isArray(value)) {
-                    
+
                     _.each(value, function(value2, name2) {
 
                         if (!defaultAttr || !defaultAttr[name] || !_.isEqual(defaultAttr[name][name2], value2)) {
@@ -133,7 +135,7 @@ joint.dia.Cell = Backbone.Model.extend({
 
         // Remove all the incoming/outgoing links that have source/target port set to any of the removed ports.
         if (this.collection && !_.isEmpty(removedPorts)) {
-            
+
             var inboundLinks = this.collection.getConnectedLinks(this, { inbound: true });
             _.each(inboundLinks, function(link) {
 
@@ -162,13 +164,13 @@ joint.dia.Cell = Backbone.Model.extend({
         // First, unembed this cell from its parent cell if there is one.
         var parentCellId = this.get('parent');
         if (parentCellId) {
-            
+
             var parentCell = this.collection && this.collection.get(parentCellId);
             parentCell.unembed(this);
         }
-        
+
         _.invoke(this.getEmbeddedCells(), 'remove', options);
-        
+
         this.trigger('remove', this, this.collection, options);
 
 	if (collection) {
@@ -183,11 +185,11 @@ joint.dia.Cell = Backbone.Model.extend({
             this.set('z', (this.collection.last().get('z') || 0) + 1);
         }
     },
-    
+
     toBack: function() {
 
         if (this.collection) {
-            
+
             this.set('z', (this.collection.first().get('z') || 0) - 1);
         }
     },
@@ -232,7 +234,7 @@ joint.dia.Cell = Backbone.Model.extend({
             return _.map(this.get('embeds') || [], function(cellId) {
 
                 return this.collection.get(cellId);
-                
+
             }, this);
         }
         return [];
@@ -243,7 +245,7 @@ joint.dia.Cell = Backbone.Model.extend({
         opt = opt || {};
 
         var clone = Backbone.Model.prototype.clone.apply(this, arguments);
-        
+
         // We don't want the clone to have the same ID as the original.
         clone.set('id', joint.util.uuid(), { silent: true });
         clone.set('embeds', '');
@@ -260,7 +262,7 @@ joint.dia.Cell = Backbone.Model.extend({
         // This mapping stores cloned links under the `id`s of they originals.
         // This prevents cloning a link more then once. Consider a link 'self loop' for example.
         var linkCloneMapping = {};
-        
+
         _.each(embeds, function(embed) {
 
             var embedClones = embed.clone({ deep: true });
@@ -310,7 +312,7 @@ joint.dia.Cell = Backbone.Model.extend({
                 });
 
             }, this);
-            
+
         }, this);
 
         // Add link clones to the array of all the new clones.
@@ -324,7 +326,7 @@ joint.dia.Cell = Backbone.Model.extend({
 
         var currentAttrs = this.get('attrs');
         var delim = '/';
-        
+
         if (_.isString(attrs)) {
             // Get/set an attribute by a special path syntax that delimits
             // nested objects by the colon character.
@@ -334,13 +336,13 @@ joint.dia.Cell = Backbone.Model.extend({
                 var attr = {};
                 joint.util.setByPath(attr, attrs, value, delim);
                 return this.set('attrs', _.merge({}, currentAttrs, attr), opt);
-                
+
             } else {
-                
+
                 return joint.util.getByPath(currentAttrs, attrs, delim);
             }
         }
-        
+
         return this.set('attrs', _.merge({}, currentAttrs, attrs), value, opt);
     },
 
@@ -351,7 +353,7 @@ joint.dia.Cell = Backbone.Model.extend({
             _.each(path, function(p) { this.removeAttr(p, opt); }, this);
             return this;
         }
-        
+
         var attrs = joint.util.unsetByPath(_.merge({}, this.get('attrs')), path, '/');
 
         return this.set('attrs', attrs, _.extend({ dirty: true }, opt));
@@ -460,7 +462,9 @@ joint.dia.CellView = Backbone.View.extend({
 
         return { 'model-id': this.model.id }
     },
+    unsubscribe: function() {
 
+    },
     initialize: function() {
 
         _.bindAll(this, 'remove', 'update');
@@ -491,7 +495,7 @@ joint.dia.CellView = Backbone.View.extend({
         // still be associated to the same object among all those clients. This is necessary for real-time
         // collaboration mechanism.
         options.id = options.id || joint.util.guid(this);
-        
+
         Backbone.View.prototype._configure.apply(this, arguments);
     },
 
@@ -514,10 +518,10 @@ joint.dia.CellView = Backbone.View.extend({
 
         this.setElement(el, false);
     },
-    
+
     findBySelector: function(selector) {
 
-        // These are either descendants of `this.$el` of `this.$el` itself. 
+        // These are either descendants of `this.$el` of `this.$el` itself.
        // `.` is a special selector used to select the wrapping `<g>` element.
         var $selected = selector === '.' ? this.$el : this.$el.find(selector);
         return $selected;
@@ -531,7 +535,7 @@ joint.dia.CellView = Backbone.View.extend({
 
             // Trigger the event on both the element itself and also on the paper.
             this.trigger.apply(this, [evt].concat(args));
-            
+
             // Paper event handlers receive the view object as the first argument.
             this.paper.trigger.apply(this.paper, [evt, this].concat(args));
         }
@@ -545,7 +549,7 @@ joint.dia.CellView = Backbone.View.extend({
         // @TODO any better solution is very welcome!
 
         var isMagnet = !!el;
-        
+
         el = el || this.el;
         var bbox = V(el).bbox(false, this.paper.viewport);
 
@@ -553,7 +557,7 @@ joint.dia.CellView = Backbone.View.extend({
         if (isMagnet) {
 
             strokeWidth = V(el).attr('stroke-width');
-            
+
         } else {
 
             strokeWidth = this.model.attr('rect/stroke-width') || this.model.attr('circle/stroke-width') || this.model.attr('ellipse/stroke-width') || this.model.attr('path/stroke-width');
@@ -563,7 +567,7 @@ joint.dia.CellView = Backbone.View.extend({
 
         return g.rect(bbox).moveAndExpand({ x: -strokeWidth/2, y: -strokeWidth/2, width: strokeWidth, height: strokeWidth });
     },
-    
+
     getBBox: function() {
 
         return V(this.el).bbox();
@@ -639,7 +643,7 @@ joint.dia.CellView = Backbone.View.extend({
         }
 
         $selected.each(function() {
-            
+
             V(this).attr('filter', 'url(#' + filterId + ')');
         });
     },
@@ -668,7 +672,7 @@ joint.dia.CellView = Backbone.View.extend({
                 }).join(''),
                 '</' + gradient.type + '>'
             ].join('');
-            
+
             var gradientElement = V(gradientSVGString);
             if (gradient.attrs) { gradientElement.attr(gradient.attrs); }
             gradientElement.node.id = gradientId;
@@ -676,7 +680,7 @@ joint.dia.CellView = Backbone.View.extend({
         }
 
         $selected.each(function() {
-            
+
             V(this).attr(attr, 'url(#' + gradientId + ')');
         });
     },
@@ -716,7 +720,7 @@ joint.dia.CellView = Backbone.View.extend({
 
         this.notify('cell:pointerclick', evt, x, y);
     },
-    
+
     pointerdown: function(evt, x, y) {
 
 	if (this.model.collection) {
@@ -726,12 +730,12 @@ joint.dia.CellView = Backbone.View.extend({
 
         this.notify('cell:pointerdown', evt, x, y);
     },
-    
+
     pointermove: function(evt, x, y) {
 
         this.notify('cell:pointermove', evt, x, y);
     },
-    
+
     pointerup: function(evt, x, y) {
 
         this.notify('cell:pointerup', evt, x, y);
